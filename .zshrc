@@ -3,7 +3,6 @@ setopt correct                                                  # Auto correct m
 setopt extendedglob                                             # Extended globbing. Allows using regular expressions with *
 setopt nocaseglob                                               # Case insensitive globbing
 setopt rcexpandparam                                            # Array expension with parameters
-setopt nocheckjobs                                              # Don't warn about running processes when exiting
 setopt numericglobsort                                          # Sort filenames numerically when it makes sense
 setopt nobeep                                                   # No beep
 setopt appendhistory                                            # Immediately append history instead of overwriting
