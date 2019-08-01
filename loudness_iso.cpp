@@ -53,7 +53,25 @@ int main(int argc, char **argv) {
     double monitor = stod(argv[1]);
     double playback = stod(argv[2]);
 
-    apply_loudness(monitor, playback);
+    if (monitor < 0 && playback < 0) {
+        // Both monitor and playback can't be < 0 dB
+        print_help(argv[0]);
+        return -1;
+    }
+
+    if (monitor < 0 || playback < 0) {
+        // Show the actual loudness contour
+        auto level = monitor > 0 ? monitor : playback;
+        auto contour = get_loudness(level);
+        cout << "Equal loudness contour at " << level << " dB\n";
+        cout << "================================================================================\n";
+        for (auto& pair : contour) {
+            cout << pair.first << "\t" << pair.second << " dB\n";
+        }
+        cout << "================================================================================\n";
+    } else {
+        apply_loudness(monitor, playback);
+    }
 
     return 0;
 }
