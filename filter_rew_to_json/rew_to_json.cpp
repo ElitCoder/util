@@ -8,13 +8,20 @@
 using namespace std;
 using json = nlohmann::json;
 
-struct PeakingFilter {
-    int fc;
-    double gain;
-    double q;
+struct Filter {
+    string type = "";
+    int fc = -1;
+    double gain = 0;
+    double q = -1;
 };
 
-using Filters = vector<PeakingFilter>;
+using Filters = vector<Filter>;
+
+const string FILTER_PEAKING = "peaking";
+const string FILTER_HIGH_SHELF = "high_shelf";
+const string FILTER_LOW_SHELF = "low_shelf";
+const string FILTER_HIGH_PASS = "high_pass";
+const string FILTER_LOW_PASS = "low_pass";
 
 Filters parse(const string &filename) {
     ifstream file(filename);
@@ -44,22 +51,44 @@ Filters parse(const string &filename) {
             continue;
         }
 
-        PeakingFilter filter;
-        stream >> tmp; // Ignore filter type
-        if (tmp != "PK") {
+        Filter filter;
+        string actual_type;
+        stream >> tmp; // Filter type
+        actual_type = tmp;
+        if (tmp == "PK") {
+            filter.type = FILTER_PEAKING;
+        } else if (tmp == "LPQ" || tmp == "LP") {
+            filter.type = FILTER_LOW_PASS;
+        } else if (tmp == "HPQ" || tmp == "HP") {
+            filter.type = FILTER_HIGH_PASS;
+        } else if (tmp == "LSQ" || tmp == "LS") {
+            filter.type = FILTER_LOW_SHELF;
+        } else if (tmp == "HSQ" || tmp == "HS") {
+            filter.type = FILTER_HIGH_SHELF;
+        } else {
+            // Invalid
+            cout << "Skipping invalid filter " << tmp << endl;
             continue;
         }
+        // Warn about LSQ/HSQ
+        if (tmp == "LSQ" || tmp == "HSQ") {
+            cout << "LSQ/HSQ are currently being exported without Q from REW, consider adding Q manually after conversion is done\n";
+        }
         stream >> tmp; // Ignore Fc
-        stream >> tmp;
+        stream >> tmp; // Frequency
         filter.fc = lround(stod(tmp));
         stream >> tmp; // Hz
-        stream >> tmp; // Gain
-        stream >> tmp;
-        filter.gain = stod(tmp);
-        stream >> tmp;
-        stream >> tmp;
-        stream >> tmp;
-        filter.q = stod(tmp);
+        if (filter.type == FILTER_PEAKING || filter.type == FILTER_LOW_SHELF || filter.type == FILTER_HIGH_SHELF) {
+            stream >> tmp; // Gain
+            stream >> tmp; // Gain value
+            filter.gain = stod(tmp);
+            stream >> tmp; // dB
+        }
+        if (filter.type == FILTER_PEAKING || actual_type == "LPQ" || actual_type == "HPQ") {
+            stream >> tmp; // Q
+            stream >> tmp; // Q value
+            filter.q = stod(tmp);
+        }
 
         cout << "Read filter with frequency " << filter.fc << " gain " << filter.gain << " and Q " << filter.q << endl;
         filters.push_back(filter);
@@ -77,7 +106,6 @@ void write_json(const Filters &filters) {
     const string FREQUENCY = "freq";
     const string GAIN = "gain";
     const string Q = "q";
-    const string TYPE_PEAKING = "peaking";
     json eq;
     json bands = json::array();
 
@@ -85,9 +113,13 @@ void write_json(const Filters &filters) {
     for (size_t i = 0; i < filters.size(); i++) {
         json band;
         band[FREQUENCY] = filters.at(i).fc;
-        band[GAIN] = filters.at(i).gain;
-        band[Q] = filters.at(i).q;
-        band[TYPE_KEY] = TYPE_PEAKING;
+        if (filters.at(i).q >= 0) {
+            band[Q] = filters.at(i).q;
+        }
+        if (filters.at(i).type != FILTER_HIGH_PASS && filters.at(i).type != FILTER_LOW_PASS) {
+            band[GAIN] = filters.at(i).gain;
+        }
+        band[TYPE_KEY] = filters.at(i).type;
         bands.push_back(band);
     }
     eq[API_KEY][BANDS_KEY] = bands;
