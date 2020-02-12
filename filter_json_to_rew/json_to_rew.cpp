@@ -7,15 +7,16 @@ using namespace std;
 using json = nlohmann::json;
 
 struct PeakingFilter {
-    int fc;
-    double gain;
-    double q;
-    string type;
+    int fc = -1;
+    double gain = 0;
+    double q = -1;
+    string type = "";
 };
 
 using Filters = vector<PeakingFilter>;
 
 void print_help(const string &name) {
+    cout << "Usage: ./" << name << " [input file JSON]\n";
 }
 
 int main(int argc, char *argv[]) {
@@ -46,10 +47,10 @@ int main(int argc, char *argv[]) {
         PeakingFilter filter;
         filter.fc = fc;
         filter.type = type;
-        if (type == "peaking") {
+        if (!q.is_null()) {
             filter.q = q;
         }
-        if (type == "peaking" || type == "low_shelf" || type == "high_shelf") {
+        if (!gain.is_null()) {
             filter.gain = gain;
         }
         filters.push_back(filter);
@@ -57,16 +58,33 @@ int main(int argc, char *argv[]) {
 
     // Write to file
     ofstream file(string(argv[1]) + ".txt");
+    size_t index = 1;
     for (auto &filter : filters) {
-        file << "Filter 0: ON ";
+        file << "Filter " << index << ": ON ";
         if (filter.type == "low_pass") {
-            file << "LP";
+            if (filter.q >= 0) {
+                file << "LPQ";
+            } else {
+                file << "LP";
+            }
         } else if (filter.type == "high_pass") {
-            file << "HP";
+            if (filter.q >= 0) {
+                file << "HPQ";
+            } else {
+                file << "HP";
+            }
         } else if (filter.type == "low_shelf") {
-            file << "LS";
+            if (filter.q >= 0) {
+                file << "LSQ";
+            } else {
+                file << "LS";
+            }
         } else if (filter.type == "high_shelf") {
-            file << "HS";
+            if (filter.q >= 0) {
+                file << "HSQ";
+            } else {
+                file << "HS";
+            }
         } else {
             file << "PK";
         }
@@ -74,10 +92,11 @@ int main(int argc, char *argv[]) {
         if (filter.type == "low_shelf" || filter.type == "high_shelf" || filter.type == "peaking") {
             file << "Gain " << filter.gain << " dB ";
         }
-        if (filter.type == "peaking") {
+        if (filter.q >= 0 && filter.type != "low_shelf" && filter.type != "high_shelf") {
             file << "Q " << filter.q;
         }
         file << endl;
+        index++;
     }
     file.close();
 

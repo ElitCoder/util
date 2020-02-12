@@ -124,7 +124,7 @@ void write_json(const Filters &filters) {
     }
     eq[API_KEY][BANDS_KEY] = bands;
 
-    ofstream file("json_filters.txt");
+    ofstream file("json_filters.json");
     file << setw(2) << eq;
     file.close();
 }
