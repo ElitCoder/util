@@ -57,12 +57,16 @@ alias df='df -h'                          # human-readable sizes
 alias free='free -h'                      # show sizes in MB
 alias np='nano -w PKGBUILD'
 alias more=less
-alias update='sudo pacman -Syyu && yaourt --noconfirm -Syyua'
+alias update_pacman='sudo pacman -Syyuu && yay -Syyuu'
+alias update_apt='sudo apt-get clean && sudo apt-get update && sudo apt-get upgrade'
+alias update=update_apt
 alias ll='ls -lah'
 alias ls='ls --color=auto'
 alias grep='grep --colour=auto'
 alias egrep='egrep --colour=auto'
 alias fgrep='fgrep --colour=auto'
+
+fpath+=$HOME/.zsh/pure
 
 # Theming section
 autoload -U promptinit; promptinit
@@ -86,24 +90,15 @@ export LESS=-r
 
 ## Plugins section: Enable fish style features
 # Use syntax highlighting
-source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 # Use history substring search
-source /usr/share/zsh/plugins/zsh-history-substring-search/zsh-history-substring-search.zsh
+source /usr/share/zsh-history-substring-search/zsh-history-substring-search.zsh
 # bind UP and DOWN arrow keys to history substring search
 zmodload zsh/terminfo
 bindkey "$terminfo[kcuu1]" history-substring-search-up
 bindkey "$terminfo[kcud1]" history-substring-search-down
 bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
-source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=8'
-
-# better yaourt colors
-export YAOURT_COLORS="nb=1:pkg=1:ver=1;32:lver=1;45:installed=1;42:grp=1;34:od=1;41;5:votes=1;44:dsc=0:other=1;35"
-
-# lineage
-export USE_CCACHE=1
-export ANDROID_JACK_VM_ARGS="-Dfile.encoding=UTF-8 -XX:+TieredCompilation -Xmx8G"
-export CCACHE_DIR=/mnt/external/ANDROID_BUILD/ccache
-export PATH="/mnt/external/ANDROID_BUILD/bin/:$PATH"
